@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "windowsContext": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\smnk2\\.gemini\\antigravity\\scratch\\windows-context-mcp\\dist\\index.js",
+        "--stdio"
+      ]
+    }
+  }
+}
