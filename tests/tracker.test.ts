@@ -16,6 +16,7 @@ describe('WindowsUsageTracker', () => {
   });
 
   afterEach(() => {
+    tracker.close();
     if (fs.existsSync(TEST_DIR)) {
       fs.rmSync(TEST_DIR, { recursive: true, force: true });
     }

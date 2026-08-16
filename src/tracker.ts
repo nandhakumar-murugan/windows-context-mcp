@@ -8,6 +8,7 @@ import {
   WindowsCurrentContext,
   WindowsPerformanceTelemetry
 } from './types.js';
+import { WindowsContextDatabase, HourlyProductivityStat, HistoricalDateStat } from './db.js';
 
 interface StoredData {
   date: string;
@@ -21,6 +22,7 @@ export class WindowsUsageTracker {
   private appDurationsSeconds: Map<string, { seconds: number; category: string; lastTitle: string }> = new Map();
   private transitions: string[] = [];
   private lastSampleTime: number = Date.now();
+  private db: WindowsContextDatabase;
   private activeWindow: ActiveWindowInfo = {
     processName: 'Desktop',
     windowTitle: 'Desktop',
@@ -32,6 +34,7 @@ export class WindowsUsageTracker {
   constructor(dataDir: string = './data') {
     this.dataDir = dataDir;
     this.currentDay = new Date().toISOString().split('T')[0];
+    this.db = new WindowsContextDatabase(dataDir);
     this.initStorage();
   }
 
@@ -100,6 +103,17 @@ export class WindowsUsageTracker {
     current.category = windowInfo.category;
     current.lastTitle = windowInfo.windowTitle;
     this.appDurationsSeconds.set(procName, current);
+
+    // Save to SQLite time-series
+    const currentHour = new Date().getHours();
+    this.db.recordFocusSession(
+      today,
+      currentHour,
+      procName,
+      windowInfo.windowTitle || '',
+      windowInfo.category,
+      elapsedSeconds
+    );
 
     // Track transitions
     if (this.transitions.length === 0 || this.transitions[this.transitions.length - 1] !== procName) {
@@ -174,6 +188,19 @@ export class WindowsUsageTracker {
     };
   }
 
+  public getHourlyBreakdown(date?: string): HourlyProductivityStat[] {
+    const targetDate = date || this.currentDay;
+    return this.db.getHourlyBreakdown(targetDate);
+  }
+
+  public getHistoricalRange(startDate: string, endDate: string): HistoricalDateStat[] {
+    return this.db.getHistoricalRange(startDate, endDate);
+  }
+
+  public getTopAppsRange(startDate: string, endDate: string, limit: number = 10) {
+    return this.db.getTopAppsRange(startDate, endDate, limit);
+  }
+
   public getCurrentContext(telemetry: WindowsPerformanceTelemetry): WindowsCurrentContext {
     return {
       platform: 'windows',
@@ -184,5 +211,9 @@ export class WindowsUsageTracker {
       performance: telemetry,
       todaySummary: this.getTodaySummary()
     };
+  }
+
+  public close() {
+    this.db.close();
   }
 }

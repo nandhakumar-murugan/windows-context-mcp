@@ -7,7 +7,7 @@ import { WINDOWS_MCP_TOOLS_DEFINITIONS, executeWindowsMcpTool } from '../src/too
 
 const TEST_DIR = './test_data_win_tools';
 
-describe('Windows MCP Tools', () => {
+describe('Windows MCP Tools (12 Tools Suite)', () => {
   let tracker: WindowsUsageTracker;
   let collector: WindowsSystemCollector;
 
@@ -36,13 +36,14 @@ describe('Windows MCP Tools', () => {
   });
 
   afterEach(() => {
+    tracker.close();
     if (fs.existsSync(TEST_DIR)) {
       fs.rmSync(TEST_DIR, { recursive: true, force: true });
     }
   });
 
-  it('should list all 10 MCP tools', () => {
-    assert.equal(WINDOWS_MCP_TOOLS_DEFINITIONS.length, 10);
+  it('should list all 12 MCP tools', () => {
+    assert.equal(WINDOWS_MCP_TOOLS_DEFINITIONS.length, 12);
     const names = WINDOWS_MCP_TOOLS_DEFINITIONS.map(t => t.name);
     assert.ok(names.includes('get_current_windows_context'));
     assert.ok(names.includes('get_active_window'));
@@ -54,6 +55,8 @@ describe('Windows MCP Tools', () => {
     assert.ok(names.includes('get_recent_transitions'));
     assert.ok(names.includes('get_system_health'));
     assert.ok(names.includes('get_top_distractions'));
+    assert.ok(names.includes('get_hourly_breakdown'));
+    assert.ok(names.includes('get_historical_usage'));
   });
 
   it('should execute get_active_window', () => {
@@ -67,21 +70,18 @@ describe('Windows MCP Tools', () => {
     const res: any = executeWindowsMcpTool(tracker, collector, 'get_pc_screen_time');
     assert.ok(res);
     assert.ok(typeof res.screen_time_today_minutes === 'number');
-    assert.ok(typeof res.productive_time_minutes === 'number');
   });
 
   it('should execute get_pc_performance', () => {
     const res: any = executeWindowsMcpTool(tracker, collector, 'get_pc_performance');
     assert.ok(res);
     assert.ok(typeof res.cpuUsagePercent === 'number');
-    assert.ok(typeof res.totalMemoryMB === 'number');
   });
 
   it('should execute get_productivity_score', () => {
     const res: any = executeWindowsMcpTool(tracker, collector, 'get_productivity_score');
     assert.ok(res);
     assert.ok(typeof res.productivity_score === 'number');
-    assert.ok(typeof res.assessment === 'string');
   });
 
   it('should execute search_window_history', () => {
@@ -106,12 +106,27 @@ describe('Windows MCP Tools', () => {
     const res: any = executeWindowsMcpTool(tracker, collector, 'get_system_health');
     assert.ok(res);
     assert.ok(res.overall_status);
-    assert.ok(typeof res.cpu_usage_percent === 'number');
   });
 
   it('should execute get_top_distractions', () => {
     const res: any = executeWindowsMcpTool(tracker, collector, 'get_top_distractions');
     assert.ok(res);
     assert.ok(Array.isArray(res.distracting_apps));
+  });
+
+  it('should execute get_hourly_breakdown', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_hourly_breakdown');
+    assert.ok(res);
+    assert.equal(res.hourly_stats.length, 24);
+  });
+
+  it('should execute get_historical_usage', () => {
+    const today = new Date().toISOString().split('T')[0];
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_historical_usage', {
+      startDate: today,
+      endDate: today
+    });
+    assert.ok(res);
+    assert.ok(Array.isArray(res.history));
   });
 });

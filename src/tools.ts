@@ -97,6 +97,37 @@ export const WINDOWS_MCP_TOOLS_DEFINITIONS: McpToolDefinition[] = [
       type: 'object',
       properties: {}
     }
+  },
+  {
+    name: 'get_hourly_breakdown',
+    description: 'Retrieves 24-hour hourly productivity timeline showing productive vs entertainment minutes per hour for today or a specific date.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        date: {
+          type: 'string',
+          description: 'Date in YYYY-MM-DD format (defaults to today)'
+        }
+      }
+    }
+  },
+  {
+    name: 'get_historical_usage',
+    description: 'Retrieves multi-day productivity stats, scores, and top applications over a specified date range.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: {
+          type: 'string',
+          description: 'Start date in YYYY-MM-DD format'
+        },
+        endDate: {
+          type: 'string',
+          description: 'End date in YYYY-MM-DD format'
+        }
+      },
+      required: ['startDate', 'endDate']
+    }
   }
 ];
 
@@ -219,6 +250,29 @@ export function executeWindowsMcpTool(
       return {
         total_distraction_minutes: distractions.reduce((acc, curr) => acc + curr.durationMinutes, 0),
         distracting_apps: distractions
+      };
+    }
+    case 'get_hourly_breakdown': {
+      const date = typeof args.date === 'string' ? args.date.trim() : undefined;
+      const hourly = tracker.getHourlyBreakdown(date);
+      return {
+        date: date || new Date().toISOString().split('T')[0],
+        hourly_stats: hourly
+      };
+    }
+    case 'get_historical_usage': {
+      const start = typeof args.startDate === 'string' ? args.startDate.trim() : '';
+      const end = typeof args.endDate === 'string' ? args.endDate.trim() : '';
+      if (!start || !end) {
+        return { error: 'Both startDate and endDate (YYYY-MM-DD) are required', data: [] };
+      }
+      const history = tracker.getHistoricalRange(start, end);
+      const topApps = tracker.getTopAppsRange(start, end, 5);
+      return {
+        start_date: start,
+        end_date: end,
+        history,
+        top_apps: topApps
       };
     }
     default:
