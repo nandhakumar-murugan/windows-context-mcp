@@ -8,13 +8,15 @@
 
 - **🪟 Active Foreground Window Tracking**: Native Win32 API interop querying active process name and window title.
 - **⏱️ Daily Screen Time Accumulator**: Tracks active duration per application and classifies into Productive, Communication, Entertainment, and Browsing.
-- **⚡ Hardware Performance Telemetry**: CPU load percentage, RAM utilization, and battery state.
+- **📊 Real-Time Web Dashboard**: Built-in interactive browser UI (`http://localhost:3001`) with live gauges, app charts, and transition chains.
+- **⚡ Hardware Performance Telemetry**: CPU load percentage, RAM utilization, user idle detection, and battery state.
 - **🤖 Native Model Context Protocol (MCP) Server**: Full Streamable HTTP MCP & JSON-RPC 2.0 endpoints for remote and local AI agents.
-- **🧪 Comprehensive Test Suite**: Full test coverage with `npm test`.
+- **🧪 Comprehensive Test Suite**: 13 automated unit tests with `npm test`.
+- **🚀 Windows Auto-Start**: Includes silent background startup scripts in `scripts/`.
 
 ---
 
-## 🛠️ MCP Tools Reference
+## 🛠️ MCP Tools Reference (10 Tools)
 
 | Tool Name | Description |
 | :--- | :--- |
@@ -24,6 +26,10 @@
 | `get_pc_performance` | CPU load %, RAM total/free/used %, and battery charging state. |
 | `get_productivity_score` | Automated PC productivity score (0-100), balance assessment, and top distracting apps. |
 | `search_window_history` | Searches application usage history today by process or window title. |
+| `get_idle_status` | Returns whether the user is actively working on the PC or currently away/idle. |
+| `get_recent_transitions` | Chronological sequence of recent window and application switches. |
+| `get_system_health` | Checks overall system resource health, memory pressure, and uptime. |
+| `get_top_distractions` | Pinpoints entertainment/gaming apps that consumed the most time on PC. |
 
 ---
 
@@ -40,11 +46,25 @@ npm run build
 npm test
 ```
 
-### 3. Start Server & Collector
+### 3. Start Server & Live Dashboard
 ```bash
 npm start
 ```
-*The server starts on port `3001` (or `PORT` in `.env`).*
+*Open `http://localhost:3001` in your browser to view the live dashboard!*
+
+---
+
+## 🔄 Windows Background & Startup Integration
+
+To launch automatically on Windows login in silent background mode:
+
+```powershell
+# Register startup task:
+powershell -ExecutionPolicy Bypass -File scripts\install-startup.ps1
+
+# To remove:
+powershell -ExecutionPolicy Bypass -File scripts\uninstall-startup.ps1
+```
 
 ---
 

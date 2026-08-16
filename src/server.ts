@@ -3,6 +3,7 @@ import cors from 'cors';
 import { WindowsUsageTracker } from './tracker.js';
 import { WindowsSystemCollector } from './collector.js';
 import { WINDOWS_MCP_TOOLS_DEFINITIONS, executeWindowsMcpTool } from './tools.js';
+import { renderDashboardHtml } from './dashboard.js';
 
 export function createServer(tracker: WindowsUsageTracker, collector: WindowsSystemCollector) {
   const app = express();
@@ -11,7 +12,13 @@ export function createServer(tracker: WindowsUsageTracker, collector: WindowsSys
   app.use(cors());
   app.use(express.json({ limit: '1mb' }));
 
-  // 1. Health Diagnostics
+  // 1. Interactive Real-Time Web Dashboard
+  app.get('/', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(renderDashboardHtml());
+  });
+
+  // 2. Health Diagnostics
   app.get('/health', (req: Request, res: Response) => {
     res.json({
       status: 'ok',

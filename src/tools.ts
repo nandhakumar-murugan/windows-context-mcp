@@ -65,6 +65,38 @@ export const WINDOWS_MCP_TOOLS_DEFINITIONS: McpToolDefinition[] = [
       },
       required: ['query']
     }
+  },
+  {
+    name: 'get_idle_status',
+    description: 'Returns whether the user is actively working on the PC or currently away/idle.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'get_recent_transitions',
+    description: 'Returns the chronological sequence of recent window and application switches (e.g. VS Code -> Chrome -> Slack).',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'get_system_health',
+    description: 'Checks overall system resource status including memory pressure, CPU load, and system uptime.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'get_top_distractions',
+    description: 'Pinpoints entertainment, gaming, or distraction applications that consumed the most time on PC today.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
   }
 ];
 
@@ -146,6 +178,47 @@ export function executeWindowsMcpTool(
         query,
         match_count: matches.length,
         results: matches
+      };
+    }
+    case 'get_idle_status': {
+      return {
+        is_idle: telemetry.idleSeconds > 120,
+        idle_seconds: telemetry.idleSeconds,
+        last_interaction_time: new Date(Date.now() - telemetry.idleSeconds * 1000).toISOString()
+      };
+    }
+    case 'get_recent_transitions': {
+      const summary = tracker.getTodaySummary();
+      return {
+        transition_chain: summary.recentTransitions.join(' → '),
+        recent_processes: summary.recentTransitions,
+        current_focus: collector.getActiveWindow().processName
+      };
+    }
+    case 'get_system_health': {
+      const memoryStatus = telemetry.usedMemoryPercent > 90 ? 'High Pressure' : telemetry.usedMemoryPercent > 75 ? 'Moderate' : 'Optimal';
+      const cpuStatus = telemetry.cpuUsagePercent > 85 ? 'High Load' : 'Normal';
+      return {
+        overall_status: memoryStatus === 'High Pressure' || cpuStatus === 'High Load' ? 'Warning' : 'Healthy',
+        cpu_usage_percent: telemetry.cpuUsagePercent,
+        cpu_status: cpuStatus,
+        memory_used_percent: telemetry.usedMemoryPercent,
+        memory_status: memoryStatus,
+        total_memory_mb: telemetry.totalMemoryMB,
+        free_memory_mb: telemetry.freeMemoryMB,
+        uptime_hours: Number((telemetry.uptimeSeconds / 3600).toFixed(1)),
+        battery_percent: telemetry.batteryPercent,
+        is_charging: telemetry.isCharging
+      };
+    }
+    case 'get_top_distractions': {
+      const summary = tracker.getTodaySummary();
+      const distractions = summary.topApps.filter(
+        a => a.category === 'Entertainment' || (a.category === 'Browser' && a.percentageOfTotal > 35)
+      );
+      return {
+        total_distraction_minutes: distractions.reduce((acc, curr) => acc + curr.durationMinutes, 0),
+        distracting_apps: distractions
       };
     }
     default:

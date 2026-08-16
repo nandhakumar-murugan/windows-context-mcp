@@ -25,6 +25,14 @@ describe('Windows MCP Tools', () => {
       category: 'Productive',
       timestamp: new Date().toISOString()
     });
+
+    tracker.recordSample({
+      processName: 'Spotify.exe',
+      windowTitle: 'Spotify Free',
+      executablePath: 'C:\\Spotify\\Spotify.exe',
+      category: 'Entertainment',
+      timestamp: new Date().toISOString()
+    });
   });
 
   afterEach(() => {
@@ -33,8 +41,8 @@ describe('Windows MCP Tools', () => {
     }
   });
 
-  it('should list all 6 MCP tools', () => {
-    assert.equal(WINDOWS_MCP_TOOLS_DEFINITIONS.length, 6);
+  it('should list all 10 MCP tools', () => {
+    assert.equal(WINDOWS_MCP_TOOLS_DEFINITIONS.length, 10);
     const names = WINDOWS_MCP_TOOLS_DEFINITIONS.map(t => t.name);
     assert.ok(names.includes('get_current_windows_context'));
     assert.ok(names.includes('get_active_window'));
@@ -42,6 +50,10 @@ describe('Windows MCP Tools', () => {
     assert.ok(names.includes('get_pc_performance'));
     assert.ok(names.includes('get_productivity_score'));
     assert.ok(names.includes('search_window_history'));
+    assert.ok(names.includes('get_idle_status'));
+    assert.ok(names.includes('get_recent_transitions'));
+    assert.ok(names.includes('get_system_health'));
+    assert.ok(names.includes('get_top_distractions'));
   });
 
   it('should execute get_active_window', () => {
@@ -76,5 +88,30 @@ describe('Windows MCP Tools', () => {
     const res: any = executeWindowsMcpTool(tracker, collector, 'search_window_history', { query: 'code' });
     assert.equal(res.match_count, 1);
     assert.equal(res.results[0].processName, 'Code.exe');
+  });
+
+  it('should execute get_idle_status', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_idle_status');
+    assert.ok(res);
+    assert.ok(typeof res.is_idle === 'boolean');
+  });
+
+  it('should execute get_recent_transitions', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_recent_transitions');
+    assert.ok(res);
+    assert.ok(typeof res.transition_chain === 'string');
+  });
+
+  it('should execute get_system_health', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_system_health');
+    assert.ok(res);
+    assert.ok(res.overall_status);
+    assert.ok(typeof res.cpu_usage_percent === 'number');
+  });
+
+  it('should execute get_top_distractions', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_top_distractions');
+    assert.ok(res);
+    assert.ok(Array.isArray(res.distracting_apps));
   });
 });
