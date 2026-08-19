@@ -1,0 +1,10 @@
+# Smithery.ai Model Context Protocol Configuration
+name: windows-context-mcp
+description: Real-time Windows desktop context, active window telemetry, and cross-device screen time hub for Gemini, Claude & ChatGPT.
+version: 1.1.0
+runtime: node
+startCommand:
+  type: stdio
+  config:
+    command: node
+    args: ["dist/index.js", "--stdio"]

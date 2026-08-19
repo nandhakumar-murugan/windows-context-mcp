@@ -1,28 +1,28 @@
 # Windows Context MCP 🪟⚡
 
-**Windows Context MCP** is a high-performance, native backend service and **Model Context Protocol (MCP)** server for Windows. It exposes real-time PC activity, focused foreground application telemetry, system resource stats, and historical productivity analytics to AI agents like **Google Gemini**, **OpenAI ChatGPT**, and **Claude**.
+**Windows Context MCP** is a high-performance, native Windows service, **Model Context Protocol (MCP)** server, and **Unified Personal Context Hub** connecting Windows desktop activity and Android mobile telemetry directly into conversational AI assistants like **Google Gemini**, **OpenAI ChatGPT**, and **Claude**.
 
 ---
 
-## 🌟 Backend Features & Architecture
+## 🌟 Features & Architecture
 
-- **🗄️ Zero-Dependency SQLite Time-Series Engine (`src/db.ts`)**: Built on native `node:sqlite` for high-throughput persistence, indexed minute-by-minute focus session recording, and fast historical aggregations.
-- **🔄 Dual Transport Support**:
-  - **Streamable HTTP / JSON-RPC 2.0 (`src/server.ts`)**: REST + JSON-RPC on port `3001` for remote AI assistants (Gemini remote MCP & ChatGPT Actions).
-  - **Native STDIO Transport (`src/stdio.ts`)**: Fast standard I/O stream for Claude Desktop, Cursor, and local CLI agents (`node dist/index.js --stdio`).
-- **🪟 Win32 Native Interop (`src/collector.ts`)**: Direct User32 / CIM queries for active window titles, process binaries, CPU delta utilization, RAM usage, user idle detection, and battery telemetry.
-- **📈 Advanced Productivity & Transition Tracking (`src/tracker.ts`)**: Hourly breakdown curves, 24-hour timelines, transition chains, and multi-day date range analytics.
-- **🧪 Automated Test Suite**: 17 unit and integration tests across storage, telemetry, and tools (`npm test`).
+- **🗄️ Zero-Dependency SQLite Time-Series (`src/db.ts`)**: Built on native `node:sqlite` for persistent indexed focus sessions, 24-hour hourly distributions, and multi-day range analytics.
+- **📱 Unified Cross-Device Hub (`src/aggregator.ts`)**: Ingests Android screen time and telemetry via `/api/sync`, calculating combined multi-device screen time, cross-device top applications, and device fleet health.
+- **🔄 Dual Protocol Transports**:
+  - **Streamable HTTP / JSON-RPC 2.0 (`src/server.ts`)**: Remote MCP gateway on port `3001` for Google Gemini & ChatGPT Custom GPT Actions.
+  - **Native STDIO Transport (`src/stdio.ts`)**: Standard I/O stream for Claude Desktop, Cursor, and local CLI agents (`node dist/index.js --stdio`).
+- **🪟 Native Win32 API Queries (`src/collector.ts`)**: Direct User32 / CIM queries for active window titles, process binaries, CPU delta utilization, RAM usage, user idle detection, and battery telemetry.
+- **🧪 Comprehensive Test Suite**: 23 automated unit and integration tests across SQLite database, cross-device aggregation, and tool executions (`npm test`).
 
 ---
 
-## 🛠️ MCP Tools Reference (12 Tools)
+## 🛠️ MCP Tools Reference (15 Tools)
 
 | Tool Name | Type | Description |
 | :--- | :--- | :--- |
 | `get_current_windows_context` | Real-time | Full real-time snapshot: active window, screen time, CPU/RAM telemetry, battery. |
 | `get_active_window` | Real-time | Focused foreground window title, process name, and category. |
-| `get_pc_screen_time` | Aggregation | Today's screen time categorized by Productive, Entertainment, Communication, Browsing. |
+| `get_pc_screen_time` | Aggregation | Today's PC screen time categorized by Productive, Entertainment, Communication, Browsing. |
 | `get_pc_performance` | Telemetry | CPU load %, RAM total/free/used %, battery charge %, and AC state. |
 | `get_productivity_score` | Analytics | Automated productivity score (0-100), balance ratio, and top distraction apps. |
 | `search_window_history` | Search | Search application usage history today by process or window title query. |
@@ -32,37 +32,33 @@
 | `get_top_distractions` | Analytics | Identifies entertainment and distraction apps consuming the most time today. |
 | `get_hourly_breakdown` | Historical | 24-hour timeline of productive vs entertainment minutes per hour for any date. |
 | `get_historical_usage` | Historical | Multi-day productivity scores, duration trends, and top apps across a date range. |
+| `get_unified_context` | Cross-Device | Combined snapshot merging PC desktop activity with synced Android phone context. |
+| `get_cross_device_screen_time` | Cross-Device | Total combined screen time across PC and mobile with device breakdown. |
+| `get_device_fleet` | Cross-Device | Lists all connected devices (Windows PC + Android phones) with sync status. |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Build
+### 1. Run via NPX (1-Click Execution)
+```bash
+npx windows-context-mcp --stdio
+```
+
+### 2. Build & Test Locally
 ```bash
 npm install
-npm run build
-```
-
-### 2. Run Tests
-```bash
 npm test
-```
-
-### 3. Run Backend in HTTP Mode (for Gemini & ChatGPT)
-```bash
+npm run build
 npm start
 ```
-*HTTP server starts on port `3001` with endpoint `http://localhost:3001/mcp`.*
-
-### 4. Run Backend in STDIO Mode (for Claude Desktop & Local MCP Clients)
-```bash
-node dist/index.js --stdio
-```
+*HTTP server starts on port `3001` with endpoint `http://localhost:3001/mcp` and live UI at `http://localhost:3001`.*
 
 ---
 
-## 🔗 Claude Desktop Configuration (`claude_desktop_config.json`)
+## 🔗 AI Assistant Setup
 
+### Claude Desktop (`%APPDATA%\Claude\claude_desktop_config.json`)
 ```json
 {
   "mcpServers": {
@@ -74,10 +70,7 @@ node dist/index.js --stdio
 }
 ```
 
----
-
-## 🔗 Google Gemini Configuration
-
+### Google Gemini / ChatGPT (HTTP Mode)
 ```json
 {
   "mcpServers": {

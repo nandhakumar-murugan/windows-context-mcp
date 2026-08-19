@@ -1,5 +1,6 @@
 import { WindowsUsageTracker } from './tracker.js';
 import { WindowsSystemCollector } from './collector.js';
+import { CrossDeviceAggregator } from './aggregator.js';
 
 export interface McpToolDefinition {
   name: string;
@@ -128,6 +129,30 @@ export const WINDOWS_MCP_TOOLS_DEFINITIONS: McpToolDefinition[] = [
       },
       required: ['startDate', 'endDate']
     }
+  },
+  {
+    name: 'get_unified_context',
+    description: 'Combines real-time Windows PC context and synced Android phone telemetry into a unified personal context snapshot.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'get_cross_device_screen_time',
+    description: 'Returns total combined screen time across both Windows PC and Android phone with device comparison.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'get_device_fleet',
+    description: 'Lists all connected personal devices (Windows PC and synced Android devices) with battery and sync states.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
   }
 ];
 
@@ -135,9 +160,11 @@ export function executeWindowsMcpTool(
   tracker: WindowsUsageTracker,
   collector: WindowsSystemCollector,
   name: string,
-  args: Record<string, unknown> = {}
+  args: Record<string, unknown> = {},
+  aggregator?: CrossDeviceAggregator
 ): unknown {
   const telemetry = collector.getPerformanceTelemetry();
+  const agg = aggregator || new CrossDeviceAggregator();
 
   switch (name) {
     case 'get_current_windows_context': {
@@ -273,6 +300,22 @@ export function executeWindowsMcpTool(
         end_date: end,
         history,
         top_apps: topApps
+      };
+    }
+    case 'get_unified_context': {
+      return agg.getUnifiedContext(tracker, collector);
+    }
+    case 'get_cross_device_screen_time': {
+      return agg.getCrossDeviceScreenTime(tracker);
+    }
+    case 'get_device_fleet': {
+      return {
+        pc: {
+          hostname: telemetry.powerSource,
+          battery: telemetry.batteryPercent,
+          status: 'online'
+        },
+        android_devices: agg.getAllDevicesList()
       };
     }
     default:

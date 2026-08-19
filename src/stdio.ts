@@ -1,10 +1,15 @@
 import readline from 'node:readline';
 import { WindowsUsageTracker } from './tracker.js';
 import { WindowsSystemCollector } from './collector.js';
+import { CrossDeviceAggregator } from './aggregator.js';
 import { WINDOWS_MCP_TOOLS_DEFINITIONS, executeWindowsMcpTool } from './tools.js';
 
-export function startStdioTransport(tracker: WindowsUsageTracker, collector: WindowsSystemCollector) {
-  const SERVER_VERSION = '1.0.0';
+export function startStdioTransport(
+  tracker: WindowsUsageTracker,
+  collector: WindowsSystemCollector,
+  aggregator: CrossDeviceAggregator = new CrossDeviceAggregator()
+) {
+  const SERVER_VERSION = '1.1.0';
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -68,7 +73,7 @@ export function startStdioTransport(tracker: WindowsUsageTracker, collector: Win
             });
           }
 
-          const toolResult = executeWindowsMcpTool(tracker, collector, toolName, toolArgs);
+          const toolResult = executeWindowsMcpTool(tracker, collector, toolName, toolArgs, aggregator);
 
           return sendResponse({
             jsonrpc: '2.0',
@@ -102,5 +107,5 @@ export function startStdioTransport(tracker: WindowsUsageTracker, collector: Win
     }
   });
 
-  process.stderr.write(`[Windows Context MCP] STDIO JSON-RPC 2.0 Transport Active\n`);
+  process.stderr.write(`[Windows Context MCP Unified Hub] STDIO JSON-RPC 2.0 Transport Active\n`);
 }

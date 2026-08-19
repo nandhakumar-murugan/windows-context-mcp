@@ -3,13 +3,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { WindowsUsageTracker } from '../src/tracker.js';
 import { WindowsSystemCollector } from '../src/collector.js';
+import { CrossDeviceAggregator } from '../src/aggregator.js';
 import { WINDOWS_MCP_TOOLS_DEFINITIONS, executeWindowsMcpTool } from '../src/tools.js';
 
 const TEST_DIR = './test_data_win_tools';
 
-describe('Windows MCP Tools (12 Tools Suite)', () => {
+describe('Windows MCP Tools (15 Tools Suite)', () => {
   let tracker: WindowsUsageTracker;
   let collector: WindowsSystemCollector;
+  let aggregator: CrossDeviceAggregator;
 
   beforeEach(() => {
     if (fs.existsSync(TEST_DIR)) {
@@ -17,6 +19,7 @@ describe('Windows MCP Tools (12 Tools Suite)', () => {
     }
     tracker = new WindowsUsageTracker(TEST_DIR);
     collector = new WindowsSystemCollector();
+    aggregator = new CrossDeviceAggregator();
 
     tracker.recordSample({
       processName: 'Code.exe',
@@ -33,6 +36,17 @@ describe('Windows MCP Tools (12 Tools Suite)', () => {
       category: 'Entertainment',
       timestamp: new Date().toISOString()
     });
+
+    aggregator.ingestAndroidPayload({
+      deviceId: 'test_phone_123',
+      todaySummary: {
+        totalScreenTimeMinutes: 50,
+        productiveMinutes: 30,
+        entertainmentMinutes: 20,
+        topApps: [{ appName: 'Slack', durationMinutes: 30, category: 'Communication' }]
+      },
+      deviceState: { batteryPercent: 90 }
+    });
   });
 
   afterEach(() => {
@@ -42,8 +56,8 @@ describe('Windows MCP Tools (12 Tools Suite)', () => {
     }
   });
 
-  it('should list all 12 MCP tools', () => {
-    assert.equal(WINDOWS_MCP_TOOLS_DEFINITIONS.length, 12);
+  it('should list all 15 MCP tools', () => {
+    assert.equal(WINDOWS_MCP_TOOLS_DEFINITIONS.length, 15);
     const names = WINDOWS_MCP_TOOLS_DEFINITIONS.map(t => t.name);
     assert.ok(names.includes('get_current_windows_context'));
     assert.ok(names.includes('get_active_window'));
@@ -57,65 +71,68 @@ describe('Windows MCP Tools (12 Tools Suite)', () => {
     assert.ok(names.includes('get_top_distractions'));
     assert.ok(names.includes('get_hourly_breakdown'));
     assert.ok(names.includes('get_historical_usage'));
+    assert.ok(names.includes('get_unified_context'));
+    assert.ok(names.includes('get_cross_device_screen_time'));
+    assert.ok(names.includes('get_device_fleet'));
   });
 
   it('should execute get_active_window', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_active_window');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_active_window', {}, aggregator);
     assert.ok(res);
     assert.ok(typeof res.processName === 'string');
     assert.ok(typeof res.windowTitle === 'string');
   });
 
   it('should execute get_pc_screen_time', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_pc_screen_time');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_pc_screen_time', {}, aggregator);
     assert.ok(res);
     assert.ok(typeof res.screen_time_today_minutes === 'number');
   });
 
   it('should execute get_pc_performance', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_pc_performance');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_pc_performance', {}, aggregator);
     assert.ok(res);
     assert.ok(typeof res.cpuUsagePercent === 'number');
   });
 
   it('should execute get_productivity_score', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_productivity_score');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_productivity_score', {}, aggregator);
     assert.ok(res);
     assert.ok(typeof res.productivity_score === 'number');
   });
 
   it('should execute search_window_history', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'search_window_history', { query: 'code' });
+    const res: any = executeWindowsMcpTool(tracker, collector, 'search_window_history', { query: 'code' }, aggregator);
     assert.equal(res.match_count, 1);
     assert.equal(res.results[0].processName, 'Code.exe');
   });
 
   it('should execute get_idle_status', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_idle_status');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_idle_status', {}, aggregator);
     assert.ok(res);
     assert.ok(typeof res.is_idle === 'boolean');
   });
 
   it('should execute get_recent_transitions', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_recent_transitions');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_recent_transitions', {}, aggregator);
     assert.ok(res);
     assert.ok(typeof res.transition_chain === 'string');
   });
 
   it('should execute get_system_health', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_system_health');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_system_health', {}, aggregator);
     assert.ok(res);
     assert.ok(res.overall_status);
   });
 
   it('should execute get_top_distractions', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_top_distractions');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_top_distractions', {}, aggregator);
     assert.ok(res);
     assert.ok(Array.isArray(res.distracting_apps));
   });
 
   it('should execute get_hourly_breakdown', () => {
-    const res: any = executeWindowsMcpTool(tracker, collector, 'get_hourly_breakdown');
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_hourly_breakdown', {}, aggregator);
     assert.ok(res);
     assert.equal(res.hourly_stats.length, 24);
   });
@@ -125,8 +142,28 @@ describe('Windows MCP Tools (12 Tools Suite)', () => {
     const res: any = executeWindowsMcpTool(tracker, collector, 'get_historical_usage', {
       startDate: today,
       endDate: today
-    });
+    }, aggregator);
     assert.ok(res);
     assert.ok(Array.isArray(res.history));
+  });
+
+  it('should execute get_unified_context', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_unified_context', {}, aggregator);
+    assert.ok(res);
+    assert.ok(res.devices.windows_pc);
+    assert.ok(res.devices.android_phone);
+    assert.equal(res.devices.android_phone.deviceId, 'test_phone_123');
+  });
+
+  it('should execute get_cross_device_screen_time', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_cross_device_screen_time', {}, aggregator);
+    assert.ok(res);
+    assert.equal(res.android_screen_time_minutes, 50);
+  });
+
+  it('should execute get_device_fleet', () => {
+    const res: any = executeWindowsMcpTool(tracker, collector, 'get_device_fleet', {}, aggregator);
+    assert.ok(res);
+    assert.equal(res.android_devices.length, 1);
   });
 });

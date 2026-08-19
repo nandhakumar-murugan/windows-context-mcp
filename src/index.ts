@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { WindowsSystemCollector } from './collector.js';
 import { WindowsUsageTracker } from './tracker.js';
+import { CrossDeviceAggregator } from './aggregator.js';
 import { createServer } from './server.js';
 import { startStdioTransport } from './stdio.js';
 
@@ -15,6 +16,7 @@ const isStdioMode = process.argv.includes('--stdio') || process.env.MCP_TRANSPOR
 
 const collector = new WindowsSystemCollector();
 const tracker = new WindowsUsageTracker(DATA_DIR);
+const aggregator = new CrossDeviceAggregator();
 
 // Start sampling loop for Windows active window
 if (!isStdioMode) {
@@ -41,17 +43,18 @@ try {
 }
 
 if (isStdioMode) {
-  startStdioTransport(tracker, collector);
+  startStdioTransport(tracker, collector, aggregator);
 } else {
   // Start HTTP MCP Server
-  const app = createServer(tracker, collector);
+  const app = createServer(tracker, collector, aggregator);
 
   app.listen(PORT, HOST, () => {
     console.log(`=======================================================`);
-    console.log(`🪟 Windows Context MCP Server running at http://${HOST}:${PORT}`);
+    console.log(`🪟 Windows Context MCP Unified Hub running at http://${HOST}:${PORT}`);
     console.log(`📡 MCP Streamable HTTP Endpoint: http://${HOST}:${PORT}/mcp`);
     console.log(`🩺 Diagnostics Endpoint: http://${HOST}:${PORT}/health`);
-    console.log(`🔍 Quick Context View: http://${HOST}:${PORT}/api/context`);
+    console.log(`📥 Mobile/Device Sync: http://${HOST}:${PORT}/api/sync`);
+    console.log(`🔍 Unified Context View: http://${HOST}:${PORT}/api/context/unified`);
     console.log(`=======================================================`);
   });
 }
