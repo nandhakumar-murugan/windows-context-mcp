@@ -17,7 +17,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "tsx --test tests/aggregator.test.ts tests/db.test.ts tests/tools.test.ts tests/tracker.test.ts"
   },
   "keywords": [
     "mcp",
