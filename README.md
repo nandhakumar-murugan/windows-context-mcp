@@ -1,5 +1,10 @@
 # Windows Context MCP 🪟⚡
 
+[![CI](https://github.com/nandhakumar-murugan/windows-context-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/nandhakumar-murugan/windows-context-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node Version](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![Model Context Protocol](https://img.shields.io/badge/Protocol-MCP%20v1.6.0-purple.svg)](https://modelcontextprotocol.io/)
+
 **Windows Context MCP** is a high-performance, native Windows service, **Model Context Protocol (MCP)** server, and **Unified Personal Context Hub** connecting Windows desktop activity and Android mobile telemetry directly into conversational AI assistants like **Google Gemini**, **OpenAI ChatGPT**, and **Claude**.
 
 ---
@@ -84,5 +89,10 @@ npm start
 
 ---
 
+## 👨‍💻 Author & Maintainer
+- **Nandhakumar Murugan** ([@nandhakumar-murugan](https://github.com/nandhakumar-murugan))
+- Google Student Ambassador 🌐 | B.E. CS & Cyber Security @ KG KiTE 🛡️
+- Founder @ Prema AI Labs 🚀
+
 ## 📄 License
-MIT License.
+This project is licensed under the [MIT License](LICENSE).
